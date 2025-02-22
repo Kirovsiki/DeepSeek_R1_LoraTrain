@@ -1,3 +1,3 @@
-这是一个能训练自己DeepSeekR1的代码，参考了博客并进行了中文向的Debug
+这是一个能训练自己DeepSeekR1的代码，参考了博客并进行了中文向的Debug，适配于DeepseekR1Qwen
 在我们的4090(24g)机器上已经跑通了
 请使用linux进行训练和推理
