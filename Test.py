@@ -10,8 +10,6 @@ BASE_MODEL_PATH = "/sg-platform-deepseek/DeepSeek-R1-Distill-Qwen-32B"
 LORA_ADAPTER_PATH = "./fine_tuned_model"
 SYSTEM_PROMPT = """#角色：你是"""
 EOS_TOKEN = "</s>"  
-
-# 生成配置
 GENERATION_CONFIG = {
     "temperature": 0.3,  
     "top_p": 0.7,
@@ -19,13 +17,11 @@ GENERATION_CONFIG = {
     "max_new_tokens": 1024,
     "repetition_penalty": 1.2,
     "do_sample": True,
-    "pad_token_id": 0,  # 确保正确的padding
+    "pad_token_id": 0,  
 }
 # ==========================================
 
 def load_model():
-    """加载并优化模型"""
-    print("正在加载基础模型...")
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name = BASE_MODEL_PATH,
         load_in_4bit = False,
@@ -55,16 +51,12 @@ def load_model():
     return model, tokenizer
 
 def build_prompt(user_input):
-    """构建与训练数据完全一致的提示词格式，确保每次都是独立的"""
-    # 添加额外指令，确保模型忽略之前的对话
     return f"""role:"system","content":"#角色：你是"
 "role:"user","content":{user_input}
 "role:"assistant","content":
 <think>"""
 
 def extract_conclusion(text):
-    """从生成的文本中提取思考过程和结论部分"""
-    # 尝试匹配 <think>xxx</think>结论：yyy 模式
     full_pattern = re.compile(r'<think>(.*?)</think>\s*结论：(.*?)(?:</s>|$)', re.DOTALL)
     full_match = full_pattern.search(text)
     
@@ -72,18 +64,12 @@ def extract_conclusion(text):
         thinking = full_match.group(1).strip()
         conclusion = full_match.group(2).strip()
         return thinking, conclusion
-    
-    # 尝试单独匹配思考部分
     think_pattern = re.compile(r'<think>(.*?)(?:</think>|$)', re.DOTALL)
     think_match = think_pattern.search(text)
     thinking = think_match.group(1).strip() if think_match else ""
-    
-    # 尝试单独匹配结论部分
     conclusion_pattern = re.compile(r'结论：(.*?)(?:</s>|$)', re.DOTALL)
     conclusion_match = conclusion_pattern.search(text)
     conclusion = conclusion_match.group(1).strip() if conclusion_match else ""
-    
-    # 如果没有找到结论，返回清理后的文本作为结论
     if not conclusion:
         cleaned_text = re.sub(r'</?think>|</s>|<\|.*?\|>|结论：', '', text)
         cleaned_text = re.sub(r'\s+', ' ', cleaned_text)
